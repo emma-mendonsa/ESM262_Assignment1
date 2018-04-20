@@ -1,0 +1,71 @@
+---
+title: "Assignment 1"
+author: "Emma Siegfried"
+date: "April 19, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Library:
+```{r message=FALSE}
+
+library(tidyverse)
+
+```
+
+
+###Import and Tidy
+
+*Data:*
+```{r}
+
+#Raw Dataset:
+gaz_raw <- read_delim("CA_Features_20180401.txt", delim = "|")
+
+#class(gaz_raw) #confirmed this is a tibble
+
+#Subset data
+gaz <- gaz_raw %>% 
+  select(FEATURE_ID, FEATURE_NAME, FEATURE_CLASS, STATE_ALPHA, COUNTY_NAME, 
+         PRIM_LAT_DEC, PRIM_LONG_DEC, SOURCE_LAT_DEC, SOURCE_LONG_DEC, ELEV_IN_M, MAP_NAME, DATE_CREATED, DATE_EDITED)
+
+gaz[gaz == 0.0] <- NA
+
+gaz <- gaz %>% 
+  na.omit() %>% 
+  filter(STATE_ALPHA == "CA")
+
+```
+
+
+*Create CSV:*
+```{r}
+
+write_delim(gaz, path = "gaz_Emma.csv", delim = "|")
+
+```
+
+
+###Analyze
+    
+*Question 1:* What is the most frequently occurring feature name?
+```{r}
+
+feature_name <- gaz$FEATURE_NAME
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
