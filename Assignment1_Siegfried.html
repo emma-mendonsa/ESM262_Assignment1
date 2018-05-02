@@ -128,10 +128,8 @@ $(document).ready(function () {
 <p>Library:</p>
 <pre class="r"><code>library(tidyverse)
 library(lubridate)
-library(sf)
-library(maps)
-library(mapdata)
-library(ggmap)</code></pre>
+library(knitr)
+library(kableExtra)</code></pre>
 <div id="import-and-tidy" class="section level3">
 <h3>Import and Tidy</h3>
 <ol style="list-style-type: decimal">
@@ -178,7 +176,12 @@ gaz_name_max &lt;- gaz %&gt;%
   group_by(FEATURE_NAME) %&gt;% 
   count(FEATURE_NAME)
 
-arrange(gaz_name_max, desc(n))</code></pre>
+arrange(gaz_name_max, desc(n))
+
+table_name &lt;- kable(gaz_name_max, &quot;html&quot;) %&gt;% 
+  kable_styling(bootstrap_options = &quot;striped&quot;, &quot;hover&quot;)
+
+table_name</code></pre>
 <p><strong>Answer:</strong> Church of Christ</p>
 <hr />
 <p><em>Question 2:</em> What is the least frequently occuring feature name?</p>
@@ -207,29 +210,681 @@ gaz_points &lt;- data.frame(
 gaz_centers &lt;- gaz_points %&gt;% 
   group_by(county) %&gt;% 
   summarise(
-    long = mean(long, na.rm = TRUE),
-    lat = mean(lat, na.rm = TRUE))
+    Longitude = mean(long, na.rm = TRUE),
+    Latitude = mean(lat, na.rm = TRUE)) %&gt;% 
+  rename(County = county)
 
-head(gaz_centers)</code></pre>
-<pre><code>## # A tibble: 6 x 3
-##   county     long   lat
-##   &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt;
-## 1 Alameda   -122.  37.7
-## 2 Alpine    -119.  38.5
-## 3 Amador    -120.  38.2
-## 4 Butte     -120.  39.2
-## 5 Calaveras -120.  38.0
-## 6 Colusa    -122.  39.0</code></pre>
-<pre class="r"><code>tail(gaz_centers)</code></pre>
-<pre><code>## # A tibble: 6 x 3
-##   county    long   lat
-##   &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt;
-## 1 Tulare   -118.  36.0
-## 2 Tuolumne -119.  37.8
-## 3 Ventura  -114.  33.0
-## 4 Yolo     -122.  38.7
-## 5 Yuba     -121.  39.2
-## 6 &lt;NA&gt;     -122.  38.3</code></pre>
+table_centers &lt;- gaz_centers %&gt;% 
+  kable(&quot;html&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+
+table_centers</code></pre>
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+County
+</th>
+<th style="text-align:right;">
+Longitude
+</th>
+<th style="text-align:right;">
+Latitude
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alameda
+</td>
+<td style="text-align:right;">
+-122.1108
+</td>
+<td style="text-align:right;">
+37.72641
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alpine
+</td>
+<td style="text-align:right;">
+-119.4155
+</td>
+<td style="text-align:right;">
+38.46465
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Amador
+</td>
+<td style="text-align:right;">
+-120.0896
+</td>
+<td style="text-align:right;">
+38.24350
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Butte
+</td>
+<td style="text-align:right;">
+-120.1489
+</td>
+<td style="text-align:right;">
+39.20365
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Calaveras
+</td>
+<td style="text-align:right;">
+-120.0978
+</td>
+<td style="text-align:right;">
+38.02912
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Colusa
+</td>
+<td style="text-align:right;">
+-121.8448
+</td>
+<td style="text-align:right;">
+39.04933
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Contra Costa
+</td>
+<td style="text-align:right;">
+-122.0018
+</td>
+<td style="text-align:right;">
+37.92377
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Del Norte
+</td>
+<td style="text-align:right;">
+-123.2159
+</td>
+<td style="text-align:right;">
+41.50418
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+El Dorado
+</td>
+<td style="text-align:right;">
+-119.0416
+</td>
+<td style="text-align:right;">
+38.30023
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fresno
+</td>
+<td style="text-align:right;">
+-118.8700
+</td>
+<td style="text-align:right;">
+36.63115
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Glenn
+</td>
+<td style="text-align:right;">
+-122.2146
+</td>
+<td style="text-align:right;">
+39.55104
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Humboldt
+</td>
+<td style="text-align:right;">
+-123.3152
+</td>
+<td style="text-align:right;">
+40.48476
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Imperial
+</td>
+<td style="text-align:right;">
+-115.3010
+</td>
+<td style="text-align:right;">
+32.88554
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inyo
+</td>
+<td style="text-align:right;">
+-117.5558
+</td>
+<td style="text-align:right;">
+36.61158
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kern
+</td>
+<td style="text-align:right;">
+-118.7343
+</td>
+<td style="text-align:right;">
+35.36715
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kings
+</td>
+<td style="text-align:right;">
+-119.7920
+</td>
+<td style="text-align:right;">
+36.16381
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lake
+</td>
+<td style="text-align:right;">
+-119.5217
+</td>
+<td style="text-align:right;">
+38.04076
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lassen
+</td>
+<td style="text-align:right;">
+-120.4653
+</td>
+<td style="text-align:right;">
+40.60123
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Los Angeles
+</td>
+<td style="text-align:right;">
+-117.7593
+</td>
+<td style="text-align:right;">
+33.95313
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Madera
+</td>
+<td style="text-align:right;">
+-116.7716
+</td>
+<td style="text-align:right;">
+36.37190
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Marin
+</td>
+<td style="text-align:right;">
+-122.1396
+</td>
+<td style="text-align:right;">
+37.83550
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mariposa
+</td>
+<td style="text-align:right;">
+-118.9436
+</td>
+<td style="text-align:right;">
+37.32609
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mendocino
+</td>
+<td style="text-align:right;">
+-122.9063
+</td>
+<td style="text-align:right;">
+39.23421
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Merced
+</td>
+<td style="text-align:right;">
+-120.6950
+</td>
+<td style="text-align:right;">
+37.22837
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Modoc
+</td>
+<td style="text-align:right;">
+-120.0731
+</td>
+<td style="text-align:right;">
+41.33246
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mono
+</td>
+<td style="text-align:right;">
+-118.8492
+</td>
+<td style="text-align:right;">
+37.89973
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Monterey
+</td>
+<td style="text-align:right;">
+-119.6145
+</td>
+<td style="text-align:right;">
+35.81198
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Napa
+</td>
+<td style="text-align:right;">
+-121.1485
+</td>
+<td style="text-align:right;">
+38.08476
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nevada
+</td>
+<td style="text-align:right;">
+-120.4911
+</td>
+<td style="text-align:right;">
+39.20459
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Orange
+</td>
+<td style="text-align:right;">
+-117.3310
+</td>
+<td style="text-align:right;">
+33.58068
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Placer
+</td>
+<td style="text-align:right;">
+-120.1922
+</td>
+<td style="text-align:right;">
+38.87233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Plumas
+</td>
+<td style="text-align:right;">
+-120.0633
+</td>
+<td style="text-align:right;">
+39.69230
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Riverside
+</td>
+<td style="text-align:right;">
+-116.2180
+</td>
+<td style="text-align:right;">
+33.62548
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sacramento
+</td>
+<td style="text-align:right;">
+-120.8456
+</td>
+<td style="text-align:right;">
+38.37442
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Benito
+</td>
+<td style="text-align:right;">
+-119.5199
+</td>
+<td style="text-align:right;">
+36.13041
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Bernardino
+</td>
+<td style="text-align:right;">
+-116.4048
+</td>
+<td style="text-align:right;">
+34.27944
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Diego
+</td>
+<td style="text-align:right;">
+-115.9804
+</td>
+<td style="text-align:right;">
+32.62458
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:right;">
+-122.4404
+</td>
+<td style="text-align:right;">
+37.76651
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Joaquin
+</td>
+<td style="text-align:right;">
+-121.2930
+</td>
+<td style="text-align:right;">
+37.94056
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Luis Obispo
+</td>
+<td style="text-align:right;">
+-120.4028
+</td>
+<td style="text-align:right;">
+35.31239
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Mateo
+</td>
+<td style="text-align:right;">
+-122.1413
+</td>
+<td style="text-align:right;">
+37.44854
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Barbara
+</td>
+<td style="text-align:right;">
+-111.0647
+</td>
+<td style="text-align:right;">
+32.02344
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Clara
+</td>
+<td style="text-align:right;">
+-121.8908
+</td>
+<td style="text-align:right;">
+37.29720
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Cruz
+</td>
+<td style="text-align:right;">
+-117.2150
+</td>
+<td style="text-align:right;">
+35.56790
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Shasta
+</td>
+<td style="text-align:right;">
+-121.7631
+</td>
+<td style="text-align:right;">
+40.62516
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sierra
+</td>
+<td style="text-align:right;">
+-120.5424
+</td>
+<td style="text-align:right;">
+39.52475
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Siskiyou
+</td>
+<td style="text-align:right;">
+-122.1756
+</td>
+<td style="text-align:right;">
+41.42510
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Solano
+</td>
+<td style="text-align:right;">
+-121.7599
+</td>
+<td style="text-align:right;">
+38.12828
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sonoma
+</td>
+<td style="text-align:right;">
+-119.9412
+</td>
+<td style="text-align:right;">
+37.57025
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stanislaus
+</td>
+<td style="text-align:right;">
+-120.9692
+</td>
+<td style="text-align:right;">
+37.59442
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sutter
+</td>
+<td style="text-align:right;">
+-118.5862
+</td>
+<td style="text-align:right;">
+38.07167
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tehama
+</td>
+<td style="text-align:right;">
+-121.9367
+</td>
+<td style="text-align:right;">
+40.01780
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Trinity
+</td>
+<td style="text-align:right;">
+-122.8708
+</td>
+<td style="text-align:right;">
+40.58469
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tulare
+</td>
+<td style="text-align:right;">
+-118.1389
+</td>
+<td style="text-align:right;">
+36.04082
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tuolumne
+</td>
+<td style="text-align:right;">
+-119.3361
+</td>
+<td style="text-align:right;">
+37.79588
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ventura
+</td>
+<td style="text-align:right;">
+-114.3863
+</td>
+<td style="text-align:right;">
+32.99511
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yolo
+</td>
+<td style="text-align:right;">
+-121.8380
+</td>
+<td style="text-align:right;">
+38.65037
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yuba
+</td>
+<td style="text-align:right;">
+-120.9307
+</td>
+<td style="text-align:right;">
+39.16233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+-121.5334
+</td>
+<td style="text-align:right;">
+38.28899
+</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <p><em>Question 4:</em> What are the fractions of the total number of features in each county that are natural? man-made?</p>
 <pre class="r"><code>#Raw Dataset:
@@ -285,33 +940,1220 @@ gaz_join_fraction &lt;- gaz_join_fraction %&gt;%
 
 
 gaz_join_fraction &lt;- gaz_join_fraction %&gt;% 
-  select(-3) 
+  select(-3) %&gt;% 
+  rename(County = COUNTY_NAME)
 
+fraction_table &lt;- gaz_join_fraction %&gt;% 
+  kable(&quot;html&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
 
-head(gaz_join_fraction)</code></pre>
-<pre><code>## # A tibble: 6 x 6
-##   COUNTY_NAME Fraction_Manmade Fraction_Natural Manmade_Per_County
-##   &lt;fct&gt;                  &lt;dbl&gt;            &lt;dbl&gt;              &lt;int&gt;
-## 1 Alameda                0.918           0.0820               2823
-## 2 Alpine                 0.385           0.615                 217
-## 3 Amador                 0.724           0.276                 439
-## 4 Butte                  0.651           0.349                 895
-## 5 Calaveras              0.680           0.320                 729
-## 6 Colusa                 0.480           0.516                 254
-## # ... with 2 more variables: Natural_Per_County &lt;int&gt;,
-## #   Total_Per_County &lt;int&gt;</code></pre>
-<pre class="r"><code>tail(gaz_join_fraction)</code></pre>
-<pre><code>## # A tibble: 6 x 6
-##   COUNTY_NAME Fraction_Manmade Fraction_Natural Manmade_Per_County
-##   &lt;fct&gt;                  &lt;dbl&gt;            &lt;dbl&gt;              &lt;int&gt;
-## 1 Tulare                 0.534            0.466               1637
-## 2 Tuolumne               0.476            0.524                794
-## 3 Ventura                0.769            0.231               1859
-## 4 Yolo                   0.718            0.276                509
-## 5 Yuba                   0.660            0.340                400
-## 6 &lt;NA&gt;                   0.222            0.889                  2
-## # ... with 2 more variables: Natural_Per_County &lt;int&gt;,
-## #   Total_Per_County &lt;int&gt;</code></pre>
+fraction_table</code></pre>
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+County
+</th>
+<th style="text-align:right;">
+Fraction_Manmade
+</th>
+<th style="text-align:right;">
+Fraction_Natural
+</th>
+<th style="text-align:right;">
+Manmade_Per_County
+</th>
+<th style="text-align:right;">
+Natural_Per_County
+</th>
+<th style="text-align:right;">
+Total_Per_County
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alameda
+</td>
+<td style="text-align:right;">
+0.9180488
+</td>
+<td style="text-align:right;">
+0.0819512
+</td>
+<td style="text-align:right;">
+2823
+</td>
+<td style="text-align:right;">
+252
+</td>
+<td style="text-align:right;">
+3075
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alpine
+</td>
+<td style="text-align:right;">
+0.3854352
+</td>
+<td style="text-align:right;">
+0.6145648
+</td>
+<td style="text-align:right;">
+217
+</td>
+<td style="text-align:right;">
+346
+</td>
+<td style="text-align:right;">
+563
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Amador
+</td>
+<td style="text-align:right;">
+0.7244224
+</td>
+<td style="text-align:right;">
+0.2755776
+</td>
+<td style="text-align:right;">
+439
+</td>
+<td style="text-align:right;">
+167
+</td>
+<td style="text-align:right;">
+606
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Butte
+</td>
+<td style="text-align:right;">
+0.6513828
+</td>
+<td style="text-align:right;">
+0.3486172
+</td>
+<td style="text-align:right;">
+895
+</td>
+<td style="text-align:right;">
+479
+</td>
+<td style="text-align:right;">
+1374
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Calaveras
+</td>
+<td style="text-align:right;">
+0.6800373
+</td>
+<td style="text-align:right;">
+0.3199627
+</td>
+<td style="text-align:right;">
+729
+</td>
+<td style="text-align:right;">
+343
+</td>
+<td style="text-align:right;">
+1072
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Colusa
+</td>
+<td style="text-align:right;">
+0.4801512
+</td>
+<td style="text-align:right;">
+0.5160681
+</td>
+<td style="text-align:right;">
+254
+</td>
+<td style="text-align:right;">
+273
+</td>
+<td style="text-align:right;">
+529
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Contra Costa
+</td>
+<td style="text-align:right;">
+0.8373812
+</td>
+<td style="text-align:right;">
+0.1626188
+</td>
+<td style="text-align:right;">
+1586
+</td>
+<td style="text-align:right;">
+308
+</td>
+<td style="text-align:right;">
+1894
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Del Norte
+</td>
+<td style="text-align:right;">
+0.4507692
+</td>
+<td style="text-align:right;">
+0.5492308
+</td>
+<td style="text-align:right;">
+293
+</td>
+<td style="text-align:right;">
+357
+</td>
+<td style="text-align:right;">
+650
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+El Dorado
+</td>
+<td style="text-align:right;">
+0.5811966
+</td>
+<td style="text-align:right;">
+0.4188034
+</td>
+<td style="text-align:right;">
+1156
+</td>
+<td style="text-align:right;">
+833
+</td>
+<td style="text-align:right;">
+1989
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fresno
+</td>
+<td style="text-align:right;">
+0.5944666
+</td>
+<td style="text-align:right;">
+0.4055334
+</td>
+<td style="text-align:right;">
+2385
+</td>
+<td style="text-align:right;">
+1627
+</td>
+<td style="text-align:right;">
+4012
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Glenn
+</td>
+<td style="text-align:right;">
+0.5281955
+</td>
+<td style="text-align:right;">
+0.4718045
+</td>
+<td style="text-align:right;">
+281
+</td>
+<td style="text-align:right;">
+251
+</td>
+<td style="text-align:right;">
+532
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Humboldt
+</td>
+<td style="text-align:right;">
+0.3975861
+</td>
+<td style="text-align:right;">
+0.6024139
+</td>
+<td style="text-align:right;">
+1120
+</td>
+<td style="text-align:right;">
+1697
+</td>
+<td style="text-align:right;">
+2817
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Imperial
+</td>
+<td style="text-align:right;">
+0.8902878
+</td>
+<td style="text-align:right;">
+0.1091127
+</td>
+<td style="text-align:right;">
+1485
+</td>
+<td style="text-align:right;">
+182
+</td>
+<td style="text-align:right;">
+1668
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inyo
+</td>
+<td style="text-align:right;">
+0.4457328
+</td>
+<td style="text-align:right;">
+0.5542672
+</td>
+<td style="text-align:right;">
+961
+</td>
+<td style="text-align:right;">
+1195
+</td>
+<td style="text-align:right;">
+2156
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kern
+</td>
+<td style="text-align:right;">
+0.6973225
+</td>
+<td style="text-align:right;">
+0.3026775
+</td>
+<td style="text-align:right;">
+2396
+</td>
+<td style="text-align:right;">
+1040
+</td>
+<td style="text-align:right;">
+3436
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kings
+</td>
+<td style="text-align:right;">
+0.7374150
+</td>
+<td style="text-align:right;">
+0.2517007
+</td>
+<td style="text-align:right;">
+542
+</td>
+<td style="text-align:right;">
+185
+</td>
+<td style="text-align:right;">
+735
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lake
+</td>
+<td style="text-align:right;">
+0.4257426
+</td>
+<td style="text-align:right;">
+0.5742574
+</td>
+<td style="text-align:right;">
+516
+</td>
+<td style="text-align:right;">
+696
+</td>
+<td style="text-align:right;">
+1212
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Lassen
+</td>
+<td style="text-align:right;">
+0.4250513
+</td>
+<td style="text-align:right;">
+0.5742642
+</td>
+<td style="text-align:right;">
+621
+</td>
+<td style="text-align:right;">
+839
+</td>
+<td style="text-align:right;">
+1461
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Los Angeles
+</td>
+<td style="text-align:right;">
+0.8921376
+</td>
+<td style="text-align:right;">
+0.1078624
+</td>
+<td style="text-align:right;">
+11778
+</td>
+<td style="text-align:right;">
+1424
+</td>
+<td style="text-align:right;">
+13202
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Madera
+</td>
+<td style="text-align:right;">
+0.5984375
+</td>
+<td style="text-align:right;">
+0.4015625
+</td>
+<td style="text-align:right;">
+766
+</td>
+<td style="text-align:right;">
+514
+</td>
+<td style="text-align:right;">
+1280
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Marin
+</td>
+<td style="text-align:right;">
+0.7203390
+</td>
+<td style="text-align:right;">
+0.2796610
+</td>
+<td style="text-align:right;">
+1105
+</td>
+<td style="text-align:right;">
+429
+</td>
+<td style="text-align:right;">
+1534
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mariposa
+</td>
+<td style="text-align:right;">
+0.4219653
+</td>
+<td style="text-align:right;">
+0.5780347
+</td>
+<td style="text-align:right;">
+438
+</td>
+<td style="text-align:right;">
+600
+</td>
+<td style="text-align:right;">
+1038
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mendocino
+</td>
+<td style="text-align:right;">
+0.3968872
+</td>
+<td style="text-align:right;">
+0.6031128
+</td>
+<td style="text-align:right;">
+1020
+</td>
+<td style="text-align:right;">
+1550
+</td>
+<td style="text-align:right;">
+2570
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Merced
+</td>
+<td style="text-align:right;">
+0.8496503
+</td>
+<td style="text-align:right;">
+0.1503497
+</td>
+<td style="text-align:right;">
+972
+</td>
+<td style="text-align:right;">
+172
+</td>
+<td style="text-align:right;">
+1144
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Modoc
+</td>
+<td style="text-align:right;">
+0.4365256
+</td>
+<td style="text-align:right;">
+0.5634744
+</td>
+<td style="text-align:right;">
+588
+</td>
+<td style="text-align:right;">
+759
+</td>
+<td style="text-align:right;">
+1347
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Mono
+</td>
+<td style="text-align:right;">
+0.4312455
+</td>
+<td style="text-align:right;">
+0.5687545
+</td>
+<td style="text-align:right;">
+599
+</td>
+<td style="text-align:right;">
+790
+</td>
+<td style="text-align:right;">
+1389
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Monterey
+</td>
+<td style="text-align:right;">
+0.6419508
+</td>
+<td style="text-align:right;">
+0.3580492
+</td>
+<td style="text-align:right;">
+1619
+</td>
+<td style="text-align:right;">
+903
+</td>
+<td style="text-align:right;">
+2522
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Napa
+</td>
+<td style="text-align:right;">
+0.6490649
+</td>
+<td style="text-align:right;">
+0.3509351
+</td>
+<td style="text-align:right;">
+590
+</td>
+<td style="text-align:right;">
+319
+</td>
+<td style="text-align:right;">
+909
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nevada
+</td>
+<td style="text-align:right;">
+0.6323887
+</td>
+<td style="text-align:right;">
+0.3676113
+</td>
+<td style="text-align:right;">
+781
+</td>
+<td style="text-align:right;">
+454
+</td>
+<td style="text-align:right;">
+1235
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Orange
+</td>
+<td style="text-align:right;">
+0.9217574
+</td>
+<td style="text-align:right;">
+0.0782426
+</td>
+<td style="text-align:right;">
+3063
+</td>
+<td style="text-align:right;">
+260
+</td>
+<td style="text-align:right;">
+3323
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Placer
+</td>
+<td style="text-align:right;">
+0.6364155
+</td>
+<td style="text-align:right;">
+0.3635845
+</td>
+<td style="text-align:right;">
+1115
+</td>
+<td style="text-align:right;">
+637
+</td>
+<td style="text-align:right;">
+1752
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Plumas
+</td>
+<td style="text-align:right;">
+0.4039813
+</td>
+<td style="text-align:right;">
+0.5960187
+</td>
+<td style="text-align:right;">
+690
+</td>
+<td style="text-align:right;">
+1018
+</td>
+<td style="text-align:right;">
+1708
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Riverside
+</td>
+<td style="text-align:right;">
+0.7894219
+</td>
+<td style="text-align:right;">
+0.2103321
+</td>
+<td style="text-align:right;">
+3209
+</td>
+<td style="text-align:right;">
+855
+</td>
+<td style="text-align:right;">
+4065
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sacramento
+</td>
+<td style="text-align:right;">
+0.9566201
+</td>
+<td style="text-align:right;">
+0.0433799
+</td>
+<td style="text-align:right;">
+2536
+</td>
+<td style="text-align:right;">
+115
+</td>
+<td style="text-align:right;">
+2651
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Benito
+</td>
+<td style="text-align:right;">
+0.5037037
+</td>
+<td style="text-align:right;">
+0.4962963
+</td>
+<td style="text-align:right;">
+340
+</td>
+<td style="text-align:right;">
+335
+</td>
+<td style="text-align:right;">
+675
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Bernardino
+</td>
+<td style="text-align:right;">
+0.7161444
+</td>
+<td style="text-align:right;">
+0.2829393
+</td>
+<td style="text-align:right;">
+3908
+</td>
+<td style="text-align:right;">
+1544
+</td>
+<td style="text-align:right;">
+5457
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Diego
+</td>
+<td style="text-align:right;">
+0.8189138
+</td>
+<td style="text-align:right;">
+0.1810862
+</td>
+<td style="text-align:right;">
+5594
+</td>
+<td style="text-align:right;">
+1237
+</td>
+<td style="text-align:right;">
+6831
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:right;">
+0.9215557
+</td>
+<td style="text-align:right;">
+0.0784443
+</td>
+<td style="text-align:right;">
+1398
+</td>
+<td style="text-align:right;">
+119
+</td>
+<td style="text-align:right;">
+1517
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Joaquin
+</td>
+<td style="text-align:right;">
+0.8911846
+</td>
+<td style="text-align:right;">
+0.1088154
+</td>
+<td style="text-align:right;">
+1294
+</td>
+<td style="text-align:right;">
+158
+</td>
+<td style="text-align:right;">
+1452
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Luis Obispo
+</td>
+<td style="text-align:right;">
+0.6068241
+</td>
+<td style="text-align:right;">
+0.3931759
+</td>
+<td style="text-align:right;">
+1156
+</td>
+<td style="text-align:right;">
+749
+</td>
+<td style="text-align:right;">
+1905
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+San Mateo
+</td>
+<td style="text-align:right;">
+0.8244397
+</td>
+<td style="text-align:right;">
+0.1755603
+</td>
+<td style="text-align:right;">
+1545
+</td>
+<td style="text-align:right;">
+329
+</td>
+<td style="text-align:right;">
+1874
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Barbara
+</td>
+<td style="text-align:right;">
+0.6811485
+</td>
+<td style="text-align:right;">
+0.3188515
+</td>
+<td style="text-align:right;">
+1803
+</td>
+<td style="text-align:right;">
+844
+</td>
+<td style="text-align:right;">
+2647
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Clara
+</td>
+<td style="text-align:right;">
+0.8522013
+</td>
+<td style="text-align:right;">
+0.1477987
+</td>
+<td style="text-align:right;">
+2710
+</td>
+<td style="text-align:right;">
+470
+</td>
+<td style="text-align:right;">
+3180
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Santa Cruz
+</td>
+<td style="text-align:right;">
+0.7491694
+</td>
+<td style="text-align:right;">
+0.2508306
+</td>
+<td style="text-align:right;">
+902
+</td>
+<td style="text-align:right;">
+302
+</td>
+<td style="text-align:right;">
+1204
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Shasta
+</td>
+<td style="text-align:right;">
+0.4364080
+</td>
+<td style="text-align:right;">
+0.5635920
+</td>
+<td style="text-align:right;">
+1074
+</td>
+<td style="text-align:right;">
+1387
+</td>
+<td style="text-align:right;">
+2461
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sierra
+</td>
+<td style="text-align:right;">
+0.5212650
+</td>
+<td style="text-align:right;">
+0.4787350
+</td>
+<td style="text-align:right;">
+478
+</td>
+<td style="text-align:right;">
+439
+</td>
+<td style="text-align:right;">
+917
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Siskiyou
+</td>
+<td style="text-align:right;">
+0.3318130
+</td>
+<td style="text-align:right;">
+0.6679019
+</td>
+<td style="text-align:right;">
+1164
+</td>
+<td style="text-align:right;">
+2343
+</td>
+<td style="text-align:right;">
+3508
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Solano
+</td>
+<td style="text-align:right;">
+0.7832244
+</td>
+<td style="text-align:right;">
+0.2167756
+</td>
+<td style="text-align:right;">
+719
+</td>
+<td style="text-align:right;">
+199
+</td>
+<td style="text-align:right;">
+918
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sonoma
+</td>
+<td style="text-align:right;">
+0.6947663
+</td>
+<td style="text-align:right;">
+0.3052337
+</td>
+<td style="text-align:right;">
+1739
+</td>
+<td style="text-align:right;">
+764
+</td>
+<td style="text-align:right;">
+2503
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stanislaus
+</td>
+<td style="text-align:right;">
+0.8489083
+</td>
+<td style="text-align:right;">
+0.1510917
+</td>
+<td style="text-align:right;">
+972
+</td>
+<td style="text-align:right;">
+173
+</td>
+<td style="text-align:right;">
+1145
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sutter
+</td>
+<td style="text-align:right;">
+0.8305085
+</td>
+<td style="text-align:right;">
+0.1694915
+</td>
+<td style="text-align:right;">
+294
+</td>
+<td style="text-align:right;">
+60
+</td>
+<td style="text-align:right;">
+354
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tehama
+</td>
+<td style="text-align:right;">
+0.4151203
+</td>
+<td style="text-align:right;">
+0.5848797
+</td>
+<td style="text-align:right;">
+604
+</td>
+<td style="text-align:right;">
+851
+</td>
+<td style="text-align:right;">
+1455
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Trinity
+</td>
+<td style="text-align:right;">
+0.3074173
+</td>
+<td style="text-align:right;">
+0.6925827
+</td>
+<td style="text-align:right;">
+688
+</td>
+<td style="text-align:right;">
+1550
+</td>
+<td style="text-align:right;">
+2238
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tulare
+</td>
+<td style="text-align:right;">
+0.5344434
+</td>
+<td style="text-align:right;">
+0.4655566
+</td>
+<td style="text-align:right;">
+1637
+</td>
+<td style="text-align:right;">
+1426
+</td>
+<td style="text-align:right;">
+3063
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tuolumne
+</td>
+<td style="text-align:right;">
+0.4763047
+</td>
+<td style="text-align:right;">
+0.5236953
+</td>
+<td style="text-align:right;">
+794
+</td>
+<td style="text-align:right;">
+873
+</td>
+<td style="text-align:right;">
+1667
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ventura
+</td>
+<td style="text-align:right;">
+0.7694536
+</td>
+<td style="text-align:right;">
+0.2305464
+</td>
+<td style="text-align:right;">
+1859
+</td>
+<td style="text-align:right;">
+557
+</td>
+<td style="text-align:right;">
+2416
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yolo
+</td>
+<td style="text-align:right;">
+0.7179126
+</td>
+<td style="text-align:right;">
+0.2764457
+</td>
+<td style="text-align:right;">
+509
+</td>
+<td style="text-align:right;">
+196
+</td>
+<td style="text-align:right;">
+709
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yuba
+</td>
+<td style="text-align:right;">
+0.6600660
+</td>
+<td style="text-align:right;">
+0.3399340
+</td>
+<td style="text-align:right;">
+400
+</td>
+<td style="text-align:right;">
+206
+</td>
+<td style="text-align:right;">
+606
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+0.2222222
+</td>
+<td style="text-align:right;">
+0.8888889
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+9
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
