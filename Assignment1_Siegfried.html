@@ -11,7 +11,6 @@
 
 <meta name="author" content="Emma Siegfried" />
 
-<meta name="date" content="2018-04-19" />
 
 <title>Assignment 1</title>
 
@@ -121,49 +120,198 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Assignment 1</h1>
 <h4 class="author"><em>Emma Siegfried</em></h4>
-<h4 class="date"><em>April 19, 2018</em></h4>
+<h4 class="date"><em>May 2, 2018</em></h4>
 
 </div>
 
 
 <p>Library:</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
+<pre class="r"><code>library(tidyverse)
+library(lubridate)
+library(sf)
+library(maps)
+library(mapdata)
+library(ggmap)</code></pre>
 <div id="import-and-tidy" class="section level3">
 <h3>Import and Tidy</h3>
-<p>*<a href="Data:*" class="uri">Data:*</a></p>
+<ol style="list-style-type: decimal">
+<li><p>Read the gazetteer data as-is (all columns; no type conversion) into a gaz_raw tibble.</p></li>
+<li><p>Copy only specified columns into a gaz tibble.</p></li>
+</ol>
 <pre class="r"><code>#Raw Dataset:
-gaz_raw &lt;- read_delim(&quot;CA_Features_20180401.txt&quot;, delim = &quot;|&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   .default = col_character(),
-##   FEATURE_ID = col_integer(),
-##   PRIM_LAT_DEC = col_double(),
-##   PRIM_LONG_DEC = col_double(),
-##   SOURCE_LAT_DEC = col_double(),
-##   SOURCE_LONG_DEC = col_double(),
-##   ELEV_IN_M = col_integer(),
-##   ELEV_IN_FT = col_integer()
-## )</code></pre>
-<pre><code>## See spec(...) for full column specifications.</code></pre>
-<pre class="r"><code>#class(gaz_raw) #confirmed this is a tibble
+gaz_raw &lt;- read_delim(&quot;CA_Features_20180401.txt&quot;, delim = &quot;|&quot;)
+
+#class(gaz_raw) #confirmed this is a tibble
 
 #Subset data
 gaz &lt;- gaz_raw %&gt;% 
   select(FEATURE_ID, FEATURE_NAME, FEATURE_CLASS, STATE_ALPHA, COUNTY_NAME, 
-         PRIM_LAT_DEC, PRIM_LONG_DEC, SOURCE_LAT_DEC, SOURCE_LONG_DEC, ELEV_IN_M, MAP_NAME, DATE_CREATED, DATE_EDITED)
-
-gaz[gaz == 0.0] &lt;- NA
-
-gaz &lt;- gaz %&gt;% 
-  na.omit() %&gt;% 
-  filter(STATE_ALPHA == &quot;CA&quot;)</code></pre>
+         PRIM_LAT_DEC, PRIM_LONG_DEC, SOURCE_LAT_DEC, SOURCE_LONG_DEC, ELEV_IN_M, MAP_NAME, DATE_CREATED, DATE_EDITED)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Convert columns to appropriate type. Convert placeholders for unknown data to NA</li>
+</ol>
+<pre class="r"><code>gaz$DATE_CREATED &lt;- as.Date(gaz$DATE_CREATED, &quot;%m/%d/%Y&quot;) 
+gaz$DATE_EDITED &lt;- as.Date.character(gaz$DATE_EDITED, &quot;%m/%d/%Y&quot;) </code></pre>
+<ol start="4" style="list-style-type: decimal">
+<li>Delete rows with: primary latitude and longitude unknown; and if not in California</li>
+</ol>
+<p><em>Tidy Dataset:</em></p>
+<pre class="r"><code>gaz &lt;- gaz %&gt;% 
+  filter(STATE_ALPHA == &quot;CA&quot;) %&gt;% 
+  filter(PRIM_LAT_DEC != &quot;NA&quot;) %&gt;% 
+  filter(PRIM_LONG_DEC != &quot;NA&quot;)</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Write tibble to CSV file with “|” delimiter</li>
+</ol>
 <p><em>Create CSV:</em></p>
 <pre class="r"><code>write_delim(gaz, path = &quot;gaz_Emma.csv&quot;, delim = &quot;|&quot;)</code></pre>
+<hr />
+<hr />
 </div>
 <div id="analyze" class="section level3">
 <h3>Analyze</h3>
 <p><em>Question 1:</em> What is the most frequently occurring feature name?</p>
-<pre class="r"><code>feature_name &lt;- gaz$FEATURE_NAME</code></pre>
+<pre class="r"><code>gaz$FEATURE_NAME &lt;- as.factor(gaz$FEATURE_NAME)
+gaz$COUNTY_NAME &lt;- as.factor(gaz$COUNTY_NAME)
+
+gaz_name_max &lt;- gaz %&gt;% 
+  group_by(FEATURE_NAME) %&gt;% 
+  count(FEATURE_NAME)
+
+arrange(gaz_name_max, desc(n))</code></pre>
+<p><strong>Answer:</strong> Church of Christ</p>
+<hr />
+<p><em>Question 2:</em> What is the least frequently occuring feature name?</p>
+<pre class="r"><code>unique(gaz$FEATURE_CLASS)
+gaz$FEATURE_CLASS &lt;- as.factor(gaz$FEATURE_CLASS)
+
+gaz_class_min &lt;- gaz %&gt;% 
+  count(FEATURE_CLASS) %&gt;% 
+  group_by(FEATURE_CLASS)
+
+arrange(gaz_class_min, desc(-gaz_class_min$n))</code></pre>
+<p><strong>Answer:</strong> Isthmus and Sea</p>
+<hr />
+<p><em>Question 3:</em> What is the approximate center point of each county?</p>
+<pre class="r"><code>#Points
+gaz_points &lt;- data.frame(
+  long = gaz$PRIM_LONG_DEC,
+  lat = gaz$PRIM_LAT_DEC,
+  names = gaz$FEATURE_NAME,
+  county = gaz$COUNTY_NAME,
+  feature = gaz$FEATURE_CLASS,
+  stringsAsFactors = FALSE
+)
+
+
+gaz_centers &lt;- gaz_points %&gt;% 
+  group_by(county) %&gt;% 
+  summarise(
+    long = mean(long, na.rm = TRUE),
+    lat = mean(lat, na.rm = TRUE))
+
+head(gaz_centers)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   county     long   lat
+##   &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt;
+## 1 Alameda   -122.  37.7
+## 2 Alpine    -119.  38.5
+## 3 Amador    -120.  38.2
+## 4 Butte     -120.  39.2
+## 5 Calaveras -120.  38.0
+## 6 Colusa    -122.  39.0</code></pre>
+<pre class="r"><code>tail(gaz_centers)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   county    long   lat
+##   &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt;
+## 1 Tulare   -118.  36.0
+## 2 Tuolumne -119.  37.8
+## 3 Ventura  -114.  33.0
+## 4 Yolo     -122.  38.7
+## 5 Yuba     -121.  39.2
+## 6 &lt;NA&gt;     -122.  38.3</code></pre>
+<hr />
+<p><em>Question 4:</em> What are the fractions of the total number of features in each county that are natural? man-made?</p>
+<pre class="r"><code>#Raw Dataset:
+features_raw &lt;- read_csv(&quot;Class_Code_Definitions.csv&quot;) %&gt;% 
+  select(1) %&gt;% 
+  setNames('FEATURE_CLASS')
+
+class_combo &lt;- as.tibble(gaz_class_min)
+
+class_combo &lt;- class_combo %&gt;% 
+  full_join(features_raw, by = &quot;FEATURE_CLASS&quot;) %&gt;% 
+  arrange(-desc(FEATURE_CLASS))
+
+definition &lt;- c(&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;, &quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;MN&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;, &quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;NA&quot;,&quot;N&quot;,&quot;M&quot;,&quot;N&quot;)
+
+class_combo &lt;- add_column(class_combo, Type = definition)
+  
+gaz_join &lt;- gaz %&gt;% 
+  full_join(class_combo, by = &quot;FEATURE_CLASS&quot;)
+
+gaz_join$COUNTY_NAME &lt;- as.factor(gaz_join$COUNTY_NAME)
+
+gaz_join_count &lt;- gaz_join %&gt;% 
+  group_by(COUNTY_NAME) %&gt;% 
+  summarise(
+    Manmade_Per_County = sum(Type == &quot;M&quot;, na.rm = TRUE),
+    Natural_Per_County = sum(Type == &quot;N&quot;, na.rm = TRUE))
+
+gaz_points_count &lt;- gaz %&gt;% 
+  group_by(COUNTY_NAME) %&gt;% 
+  count(FEATURE_CLASS)
+
+gaz_points_count &lt;- gaz_points_count %&gt;% 
+  group_by(COUNTY_NAME) %&gt;% 
+  summarise(
+    sum(n)
+  )
+
+gaz_points_count &lt;- rename(gaz_points_count, Total_Per_County = &quot;sum(n)&quot;)
+
+
+gaz_join_count &lt;- gaz_join_count %&gt;% 
+  full_join(gaz_points_count, by = &quot;COUNTY_NAME&quot;)
+
+gaz_join_fraction &lt;- gaz_join_count %&gt;% 
+  group_by(COUNTY_NAME) %&gt;% 
+  summarise(
+    Fraction_Manmade = Manmade_Per_County/Total_Per_County, na.rm = TRUE,
+    Fraction_Natural = Natural_Per_County/Total_Per_County, na.rm = TRUE)
+
+gaz_join_fraction &lt;- gaz_join_fraction %&gt;% 
+  full_join(gaz_join_count, by = &quot;COUNTY_NAME&quot;)
+
+
+gaz_join_fraction &lt;- gaz_join_fraction %&gt;% 
+  select(-3) 
+
+
+head(gaz_join_fraction)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   COUNTY_NAME Fraction_Manmade Fraction_Natural Manmade_Per_County
+##   &lt;fct&gt;                  &lt;dbl&gt;            &lt;dbl&gt;              &lt;int&gt;
+## 1 Alameda                0.918           0.0820               2823
+## 2 Alpine                 0.385           0.615                 217
+## 3 Amador                 0.724           0.276                 439
+## 4 Butte                  0.651           0.349                 895
+## 5 Calaveras              0.680           0.320                 729
+## 6 Colusa                 0.480           0.516                 254
+## # ... with 2 more variables: Natural_Per_County &lt;int&gt;,
+## #   Total_Per_County &lt;int&gt;</code></pre>
+<pre class="r"><code>tail(gaz_join_fraction)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   COUNTY_NAME Fraction_Manmade Fraction_Natural Manmade_Per_County
+##   &lt;fct&gt;                  &lt;dbl&gt;            &lt;dbl&gt;              &lt;int&gt;
+## 1 Tulare                 0.534            0.466               1637
+## 2 Tuolumne               0.476            0.524                794
+## 3 Ventura                0.769            0.231               1859
+## 4 Yolo                   0.718            0.276                509
+## 5 Yuba                   0.660            0.340                400
+## 6 &lt;NA&gt;                   0.222            0.889                  2
+## # ... with 2 more variables: Natural_Per_County &lt;int&gt;,
+## #   Total_Per_County &lt;int&gt;</code></pre>
 </div>
 
 
