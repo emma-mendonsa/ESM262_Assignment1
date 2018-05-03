@@ -169,34 +169,42 @@ gaz$DATE_EDITED &lt;- as.Date.character(gaz$DATE_EDITED, &quot;%m/%d/%Y&quot;) <
 <div id="analyze" class="section level3">
 <h3>Analyze</h3>
 <p><em>Question 1:</em> What is the most frequently occurring feature name?</p>
-<pre class="r"><code>gaz$FEATURE_NAME &lt;- as.factor(gaz$FEATURE_NAME)
+<pre class="r"><code>#Set Columns as Factors
+gaz$FEATURE_NAME &lt;- as.factor(gaz$FEATURE_NAME)
 gaz$COUNTY_NAME &lt;- as.factor(gaz$COUNTY_NAME)
 
+#Dataframe: Frequency of Feature Names (Ordered to Max)
 gaz_name_max &lt;- gaz %&gt;% 
   group_by(FEATURE_NAME) %&gt;% 
   count(FEATURE_NAME)
 
-arrange(gaz_name_max, desc(n))
+arrange(gaz_name_max, desc(n)) #Arrange in descending order
 
+#HTML Table: Scrollable
 table_name &lt;- kable(gaz_name_max, &quot;html&quot;) %&gt;% 
-  kable_styling(bootstrap_options = &quot;striped&quot;, &quot;hover&quot;)
+  kable_styling(bootstrap_options = &quot;striped&quot;, &quot;hover&quot;) %&gt;% 
+  scroll_box(width = &quot;80%&quot;, height = &quot;200px&quot;)
 
 table_name</code></pre>
 <p><strong>Answer:</strong> Church of Christ</p>
 <hr />
 <p><em>Question 2:</em> What is the least frequently occuring feature name?</p>
-<pre class="r"><code>unique(gaz$FEATURE_CLASS)
+<pre class="r"><code>#Variety in Feature Class
+unique(gaz$FEATURE_CLASS)
+
+#Set Column as Factor
 gaz$FEATURE_CLASS &lt;- as.factor(gaz$FEATURE_CLASS)
 
+#Dataframe: Frequency of Feature Names (Ordered to Min)
 gaz_class_min &lt;- gaz %&gt;% 
   count(FEATURE_CLASS) %&gt;% 
   group_by(FEATURE_CLASS)
 
-arrange(gaz_class_min, desc(-gaz_class_min$n))</code></pre>
+arrange(gaz_class_min, desc(-gaz_class_min$n)) #Arrange in descending order</code></pre>
 <p><strong>Answer:</strong> Isthmus and Sea</p>
 <hr />
 <p><em>Question 3:</em> What is the approximate center point of each county?</p>
-<pre class="r"><code>#Points
+<pre class="r"><code>#Dataframe: Subset of Coordinates, Feature name, County name
 gaz_points &lt;- data.frame(
   long = gaz$PRIM_LONG_DEC,
   lat = gaz$PRIM_LAT_DEC,
@@ -206,7 +214,7 @@ gaz_points &lt;- data.frame(
   stringsAsFactors = FALSE
 )
 
-
+#Dataframe: Summarize Coordinates by County
 gaz_centers &lt;- gaz_points %&gt;% 
   group_by(county) %&gt;% 
   summarise(
@@ -214,11 +222,14 @@ gaz_centers &lt;- gaz_points %&gt;%
     Latitude = mean(lat, na.rm = TRUE)) %&gt;% 
   rename(County = county)
 
+#HTML Table: Scrollable
 table_centers &lt;- gaz_centers %&gt;% 
   kable(&quot;html&quot;) %&gt;% 
-  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;)) %&gt;% 
+  scroll_box(width = &quot;80%&quot;, height = &quot;400px&quot;)
 
 table_centers</code></pre>
+<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:400px; overflow-x: scroll; width:80%; ">
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -885,34 +896,40 @@ NA
 </tr>
 </tbody>
 </table>
+</div>
 <hr />
 <p><em>Question 4:</em> What are the fractions of the total number of features in each county that are natural? man-made?</p>
-<pre class="r"><code>#Raw Dataset:
+<pre class="r"><code>#Import Offical Feature Class Dataset:
 features_raw &lt;- read_csv(&quot;Class_Code_Definitions.csv&quot;) %&gt;% 
   select(1) %&gt;% 
   setNames('FEATURE_CLASS')
 
-class_combo &lt;- as.tibble(gaz_class_min)
+#Create Combo Tibble
+class_combo &lt;- as.tibble(gaz_class_min) #made tibble
 
 class_combo &lt;- class_combo %&gt;% 
-  full_join(features_raw, by = &quot;FEATURE_CLASS&quot;) %&gt;% 
+  full_join(features_raw, by = &quot;FEATURE_CLASS&quot;) %&gt;%  #join Offical Features to Gaz Features (note: rows go from 63 to 65)
   arrange(-desc(FEATURE_CLASS))
 
+#Vector of Manmade (M) and Natural (N). Both = MN; Unknown = NA
 definition &lt;- c(&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;, &quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;MN&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;N&quot;,&quot;M&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;,&quot;N&quot;, &quot;N&quot;,&quot;N&quot;,&quot;M&quot;,&quot;M&quot;,&quot;M&quot;,&quot;NA&quot;,&quot;N&quot;,&quot;M&quot;,&quot;N&quot;)
 
-class_combo &lt;- add_column(class_combo, Type = definition)
-  
+class_combo &lt;- add_column(class_combo, Type = definition) #Expand tibble with Manmade/Natural categories
+
+#Full join of Gaz &amp; Combo tibble  
 gaz_join &lt;- gaz %&gt;% 
   full_join(class_combo, by = &quot;FEATURE_CLASS&quot;)
 
-gaz_join$COUNTY_NAME &lt;- as.factor(gaz_join$COUNTY_NAME)
+gaz_join$COUNTY_NAME &lt;- as.factor(gaz_join$COUNTY_NAME)  #Change County_Name to factor
 
+#Dataframe: Summarize # of M/N Features by County
 gaz_join_count &lt;- gaz_join %&gt;% 
   group_by(COUNTY_NAME) %&gt;% 
   summarise(
     Manmade_Per_County = sum(Type == &quot;M&quot;, na.rm = TRUE),
     Natural_Per_County = sum(Type == &quot;N&quot;, na.rm = TRUE))
 
+#Dataframe: Total Features per County
 gaz_points_count &lt;- gaz %&gt;% 
   group_by(COUNTY_NAME) %&gt;% 
   count(FEATURE_CLASS)
@@ -923,12 +940,13 @@ gaz_points_count &lt;- gaz_points_count %&gt;%
     sum(n)
   )
 
-gaz_points_count &lt;- rename(gaz_points_count, Total_Per_County = &quot;sum(n)&quot;)
+gaz_points_count &lt;- rename(gaz_points_count, Total_Per_County = &quot;sum(n)&quot;) #Rename column
 
-
+#Dataframe Complete: County Name, Counts of Manmade, Natural, and Total features per County
 gaz_join_count &lt;- gaz_join_count %&gt;% 
   full_join(gaz_points_count, by = &quot;COUNTY_NAME&quot;)
 
+#Dataframe: Feature Type Fractions
 gaz_join_fraction &lt;- gaz_join_count %&gt;% 
   group_by(COUNTY_NAME) %&gt;% 
   summarise(
@@ -943,11 +961,18 @@ gaz_join_fraction &lt;- gaz_join_fraction %&gt;%
   select(-3) %&gt;% 
   rename(County = COUNTY_NAME)
 
+#Round Fractions
+gaz_join_fraction$Fraction_Manmade &lt;- round(gaz_join_fraction$Fraction_Manmade, 2)
+gaz_join_fraction$Fraction_Natural &lt;- round(gaz_join_fraction$Fraction_Natural, 2)
+
+
 fraction_table &lt;- gaz_join_fraction %&gt;% 
   kable(&quot;html&quot;) %&gt;% 
-  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;)) %&gt;% 
+  scroll_box(width = &quot;90%&quot;, height = &quot;400px&quot;)
 
 fraction_table</code></pre>
+<div style="border: 1px solid #ddd; padding: 5px; overflow-y: scroll; height:400px; overflow-x: scroll; width:90%; ">
 <table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -977,10 +1002,10 @@ Total_Per_County
 Alameda
 </td>
 <td style="text-align:right;">
-0.9180488
+0.92
 </td>
 <td style="text-align:right;">
-0.0819512
+0.08
 </td>
 <td style="text-align:right;">
 2823
@@ -997,10 +1022,10 @@ Alameda
 Alpine
 </td>
 <td style="text-align:right;">
-0.3854352
+0.39
 </td>
 <td style="text-align:right;">
-0.6145648
+0.61
 </td>
 <td style="text-align:right;">
 217
@@ -1017,10 +1042,10 @@ Alpine
 Amador
 </td>
 <td style="text-align:right;">
-0.7244224
+0.72
 </td>
 <td style="text-align:right;">
-0.2755776
+0.28
 </td>
 <td style="text-align:right;">
 439
@@ -1037,10 +1062,10 @@ Amador
 Butte
 </td>
 <td style="text-align:right;">
-0.6513828
+0.65
 </td>
 <td style="text-align:right;">
-0.3486172
+0.35
 </td>
 <td style="text-align:right;">
 895
@@ -1057,10 +1082,10 @@ Butte
 Calaveras
 </td>
 <td style="text-align:right;">
-0.6800373
+0.68
 </td>
 <td style="text-align:right;">
-0.3199627
+0.32
 </td>
 <td style="text-align:right;">
 729
@@ -1077,10 +1102,10 @@ Calaveras
 Colusa
 </td>
 <td style="text-align:right;">
-0.4801512
+0.48
 </td>
 <td style="text-align:right;">
-0.5160681
+0.52
 </td>
 <td style="text-align:right;">
 254
@@ -1097,10 +1122,10 @@ Colusa
 Contra Costa
 </td>
 <td style="text-align:right;">
-0.8373812
+0.84
 </td>
 <td style="text-align:right;">
-0.1626188
+0.16
 </td>
 <td style="text-align:right;">
 1586
@@ -1117,10 +1142,10 @@ Contra Costa
 Del Norte
 </td>
 <td style="text-align:right;">
-0.4507692
+0.45
 </td>
 <td style="text-align:right;">
-0.5492308
+0.55
 </td>
 <td style="text-align:right;">
 293
@@ -1137,10 +1162,10 @@ Del Norte
 El Dorado
 </td>
 <td style="text-align:right;">
-0.5811966
+0.58
 </td>
 <td style="text-align:right;">
-0.4188034
+0.42
 </td>
 <td style="text-align:right;">
 1156
@@ -1157,10 +1182,10 @@ El Dorado
 Fresno
 </td>
 <td style="text-align:right;">
-0.5944666
+0.59
 </td>
 <td style="text-align:right;">
-0.4055334
+0.41
 </td>
 <td style="text-align:right;">
 2385
@@ -1177,10 +1202,10 @@ Fresno
 Glenn
 </td>
 <td style="text-align:right;">
-0.5281955
+0.53
 </td>
 <td style="text-align:right;">
-0.4718045
+0.47
 </td>
 <td style="text-align:right;">
 281
@@ -1197,10 +1222,10 @@ Glenn
 Humboldt
 </td>
 <td style="text-align:right;">
-0.3975861
+0.40
 </td>
 <td style="text-align:right;">
-0.6024139
+0.60
 </td>
 <td style="text-align:right;">
 1120
@@ -1217,10 +1242,10 @@ Humboldt
 Imperial
 </td>
 <td style="text-align:right;">
-0.8902878
+0.89
 </td>
 <td style="text-align:right;">
-0.1091127
+0.11
 </td>
 <td style="text-align:right;">
 1485
@@ -1237,10 +1262,10 @@ Imperial
 Inyo
 </td>
 <td style="text-align:right;">
-0.4457328
+0.45
 </td>
 <td style="text-align:right;">
-0.5542672
+0.55
 </td>
 <td style="text-align:right;">
 961
@@ -1257,10 +1282,10 @@ Inyo
 Kern
 </td>
 <td style="text-align:right;">
-0.6973225
+0.70
 </td>
 <td style="text-align:right;">
-0.3026775
+0.30
 </td>
 <td style="text-align:right;">
 2396
@@ -1277,10 +1302,10 @@ Kern
 Kings
 </td>
 <td style="text-align:right;">
-0.7374150
+0.74
 </td>
 <td style="text-align:right;">
-0.2517007
+0.25
 </td>
 <td style="text-align:right;">
 542
@@ -1297,10 +1322,10 @@ Kings
 Lake
 </td>
 <td style="text-align:right;">
-0.4257426
+0.43
 </td>
 <td style="text-align:right;">
-0.5742574
+0.57
 </td>
 <td style="text-align:right;">
 516
@@ -1317,10 +1342,10 @@ Lake
 Lassen
 </td>
 <td style="text-align:right;">
-0.4250513
+0.43
 </td>
 <td style="text-align:right;">
-0.5742642
+0.57
 </td>
 <td style="text-align:right;">
 621
@@ -1337,10 +1362,10 @@ Lassen
 Los Angeles
 </td>
 <td style="text-align:right;">
-0.8921376
+0.89
 </td>
 <td style="text-align:right;">
-0.1078624
+0.11
 </td>
 <td style="text-align:right;">
 11778
@@ -1357,10 +1382,10 @@ Los Angeles
 Madera
 </td>
 <td style="text-align:right;">
-0.5984375
+0.60
 </td>
 <td style="text-align:right;">
-0.4015625
+0.40
 </td>
 <td style="text-align:right;">
 766
@@ -1377,10 +1402,10 @@ Madera
 Marin
 </td>
 <td style="text-align:right;">
-0.7203390
+0.72
 </td>
 <td style="text-align:right;">
-0.2796610
+0.28
 </td>
 <td style="text-align:right;">
 1105
@@ -1397,10 +1422,10 @@ Marin
 Mariposa
 </td>
 <td style="text-align:right;">
-0.4219653
+0.42
 </td>
 <td style="text-align:right;">
-0.5780347
+0.58
 </td>
 <td style="text-align:right;">
 438
@@ -1417,10 +1442,10 @@ Mariposa
 Mendocino
 </td>
 <td style="text-align:right;">
-0.3968872
+0.40
 </td>
 <td style="text-align:right;">
-0.6031128
+0.60
 </td>
 <td style="text-align:right;">
 1020
@@ -1437,10 +1462,10 @@ Mendocino
 Merced
 </td>
 <td style="text-align:right;">
-0.8496503
+0.85
 </td>
 <td style="text-align:right;">
-0.1503497
+0.15
 </td>
 <td style="text-align:right;">
 972
@@ -1457,10 +1482,10 @@ Merced
 Modoc
 </td>
 <td style="text-align:right;">
-0.4365256
+0.44
 </td>
 <td style="text-align:right;">
-0.5634744
+0.56
 </td>
 <td style="text-align:right;">
 588
@@ -1477,10 +1502,10 @@ Modoc
 Mono
 </td>
 <td style="text-align:right;">
-0.4312455
+0.43
 </td>
 <td style="text-align:right;">
-0.5687545
+0.57
 </td>
 <td style="text-align:right;">
 599
@@ -1497,10 +1522,10 @@ Mono
 Monterey
 </td>
 <td style="text-align:right;">
-0.6419508
+0.64
 </td>
 <td style="text-align:right;">
-0.3580492
+0.36
 </td>
 <td style="text-align:right;">
 1619
@@ -1517,10 +1542,10 @@ Monterey
 Napa
 </td>
 <td style="text-align:right;">
-0.6490649
+0.65
 </td>
 <td style="text-align:right;">
-0.3509351
+0.35
 </td>
 <td style="text-align:right;">
 590
@@ -1537,10 +1562,10 @@ Napa
 Nevada
 </td>
 <td style="text-align:right;">
-0.6323887
+0.63
 </td>
 <td style="text-align:right;">
-0.3676113
+0.37
 </td>
 <td style="text-align:right;">
 781
@@ -1557,10 +1582,10 @@ Nevada
 Orange
 </td>
 <td style="text-align:right;">
-0.9217574
+0.92
 </td>
 <td style="text-align:right;">
-0.0782426
+0.08
 </td>
 <td style="text-align:right;">
 3063
@@ -1577,10 +1602,10 @@ Orange
 Placer
 </td>
 <td style="text-align:right;">
-0.6364155
+0.64
 </td>
 <td style="text-align:right;">
-0.3635845
+0.36
 </td>
 <td style="text-align:right;">
 1115
@@ -1597,10 +1622,10 @@ Placer
 Plumas
 </td>
 <td style="text-align:right;">
-0.4039813
+0.40
 </td>
 <td style="text-align:right;">
-0.5960187
+0.60
 </td>
 <td style="text-align:right;">
 690
@@ -1617,10 +1642,10 @@ Plumas
 Riverside
 </td>
 <td style="text-align:right;">
-0.7894219
+0.79
 </td>
 <td style="text-align:right;">
-0.2103321
+0.21
 </td>
 <td style="text-align:right;">
 3209
@@ -1637,10 +1662,10 @@ Riverside
 Sacramento
 </td>
 <td style="text-align:right;">
-0.9566201
+0.96
 </td>
 <td style="text-align:right;">
-0.0433799
+0.04
 </td>
 <td style="text-align:right;">
 2536
@@ -1657,10 +1682,10 @@ Sacramento
 San Benito
 </td>
 <td style="text-align:right;">
-0.5037037
+0.50
 </td>
 <td style="text-align:right;">
-0.4962963
+0.50
 </td>
 <td style="text-align:right;">
 340
@@ -1677,10 +1702,10 @@ San Benito
 San Bernardino
 </td>
 <td style="text-align:right;">
-0.7161444
+0.72
 </td>
 <td style="text-align:right;">
-0.2829393
+0.28
 </td>
 <td style="text-align:right;">
 3908
@@ -1697,10 +1722,10 @@ San Bernardino
 San Diego
 </td>
 <td style="text-align:right;">
-0.8189138
+0.82
 </td>
 <td style="text-align:right;">
-0.1810862
+0.18
 </td>
 <td style="text-align:right;">
 5594
@@ -1717,10 +1742,10 @@ San Diego
 San Francisco
 </td>
 <td style="text-align:right;">
-0.9215557
+0.92
 </td>
 <td style="text-align:right;">
-0.0784443
+0.08
 </td>
 <td style="text-align:right;">
 1398
@@ -1737,10 +1762,10 @@ San Francisco
 San Joaquin
 </td>
 <td style="text-align:right;">
-0.8911846
+0.89
 </td>
 <td style="text-align:right;">
-0.1088154
+0.11
 </td>
 <td style="text-align:right;">
 1294
@@ -1757,10 +1782,10 @@ San Joaquin
 San Luis Obispo
 </td>
 <td style="text-align:right;">
-0.6068241
+0.61
 </td>
 <td style="text-align:right;">
-0.3931759
+0.39
 </td>
 <td style="text-align:right;">
 1156
@@ -1777,10 +1802,10 @@ San Luis Obispo
 San Mateo
 </td>
 <td style="text-align:right;">
-0.8244397
+0.82
 </td>
 <td style="text-align:right;">
-0.1755603
+0.18
 </td>
 <td style="text-align:right;">
 1545
@@ -1797,10 +1822,10 @@ San Mateo
 Santa Barbara
 </td>
 <td style="text-align:right;">
-0.6811485
+0.68
 </td>
 <td style="text-align:right;">
-0.3188515
+0.32
 </td>
 <td style="text-align:right;">
 1803
@@ -1817,10 +1842,10 @@ Santa Barbara
 Santa Clara
 </td>
 <td style="text-align:right;">
-0.8522013
+0.85
 </td>
 <td style="text-align:right;">
-0.1477987
+0.15
 </td>
 <td style="text-align:right;">
 2710
@@ -1837,10 +1862,10 @@ Santa Clara
 Santa Cruz
 </td>
 <td style="text-align:right;">
-0.7491694
+0.75
 </td>
 <td style="text-align:right;">
-0.2508306
+0.25
 </td>
 <td style="text-align:right;">
 902
@@ -1857,10 +1882,10 @@ Santa Cruz
 Shasta
 </td>
 <td style="text-align:right;">
-0.4364080
+0.44
 </td>
 <td style="text-align:right;">
-0.5635920
+0.56
 </td>
 <td style="text-align:right;">
 1074
@@ -1877,10 +1902,10 @@ Shasta
 Sierra
 </td>
 <td style="text-align:right;">
-0.5212650
+0.52
 </td>
 <td style="text-align:right;">
-0.4787350
+0.48
 </td>
 <td style="text-align:right;">
 478
@@ -1897,10 +1922,10 @@ Sierra
 Siskiyou
 </td>
 <td style="text-align:right;">
-0.3318130
+0.33
 </td>
 <td style="text-align:right;">
-0.6679019
+0.67
 </td>
 <td style="text-align:right;">
 1164
@@ -1917,10 +1942,10 @@ Siskiyou
 Solano
 </td>
 <td style="text-align:right;">
-0.7832244
+0.78
 </td>
 <td style="text-align:right;">
-0.2167756
+0.22
 </td>
 <td style="text-align:right;">
 719
@@ -1937,10 +1962,10 @@ Solano
 Sonoma
 </td>
 <td style="text-align:right;">
-0.6947663
+0.69
 </td>
 <td style="text-align:right;">
-0.3052337
+0.31
 </td>
 <td style="text-align:right;">
 1739
@@ -1957,10 +1982,10 @@ Sonoma
 Stanislaus
 </td>
 <td style="text-align:right;">
-0.8489083
+0.85
 </td>
 <td style="text-align:right;">
-0.1510917
+0.15
 </td>
 <td style="text-align:right;">
 972
@@ -1977,10 +2002,10 @@ Stanislaus
 Sutter
 </td>
 <td style="text-align:right;">
-0.8305085
+0.83
 </td>
 <td style="text-align:right;">
-0.1694915
+0.17
 </td>
 <td style="text-align:right;">
 294
@@ -1997,10 +2022,10 @@ Sutter
 Tehama
 </td>
 <td style="text-align:right;">
-0.4151203
+0.42
 </td>
 <td style="text-align:right;">
-0.5848797
+0.58
 </td>
 <td style="text-align:right;">
 604
@@ -2017,10 +2042,10 @@ Tehama
 Trinity
 </td>
 <td style="text-align:right;">
-0.3074173
+0.31
 </td>
 <td style="text-align:right;">
-0.6925827
+0.69
 </td>
 <td style="text-align:right;">
 688
@@ -2037,10 +2062,10 @@ Trinity
 Tulare
 </td>
 <td style="text-align:right;">
-0.5344434
+0.53
 </td>
 <td style="text-align:right;">
-0.4655566
+0.47
 </td>
 <td style="text-align:right;">
 1637
@@ -2057,10 +2082,10 @@ Tulare
 Tuolumne
 </td>
 <td style="text-align:right;">
-0.4763047
+0.48
 </td>
 <td style="text-align:right;">
-0.5236953
+0.52
 </td>
 <td style="text-align:right;">
 794
@@ -2077,10 +2102,10 @@ Tuolumne
 Ventura
 </td>
 <td style="text-align:right;">
-0.7694536
+0.77
 </td>
 <td style="text-align:right;">
-0.2305464
+0.23
 </td>
 <td style="text-align:right;">
 1859
@@ -2097,10 +2122,10 @@ Ventura
 Yolo
 </td>
 <td style="text-align:right;">
-0.7179126
+0.72
 </td>
 <td style="text-align:right;">
-0.2764457
+0.28
 </td>
 <td style="text-align:right;">
 509
@@ -2117,10 +2142,10 @@ Yolo
 Yuba
 </td>
 <td style="text-align:right;">
-0.6600660
+0.66
 </td>
 <td style="text-align:right;">
-0.3399340
+0.34
 </td>
 <td style="text-align:right;">
 400
@@ -2137,10 +2162,10 @@ Yuba
 NA
 </td>
 <td style="text-align:right;">
-0.2222222
+0.22
 </td>
 <td style="text-align:right;">
-0.8888889
+0.89
 </td>
 <td style="text-align:right;">
 2
@@ -2154,6 +2179,7 @@ NA
 </tr>
 </tbody>
 </table>
+</div>
 </div>
 
 

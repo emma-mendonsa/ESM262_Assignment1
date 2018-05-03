@@ -82,17 +82,21 @@ write_delim(gaz, path = "gaz_Emma.csv", delim = "|")
 *Question 1:* What is the most frequently occurring feature name?
 ```{r results='hide'}
 
+#Set Columns as Factors
 gaz$FEATURE_NAME <- as.factor(gaz$FEATURE_NAME)
 gaz$COUNTY_NAME <- as.factor(gaz$COUNTY_NAME)
 
+#Dataframe: Frequency of Feature Names (Ordered to Max)
 gaz_name_max <- gaz %>% 
   group_by(FEATURE_NAME) %>% 
   count(FEATURE_NAME)
 
-arrange(gaz_name_max, desc(n))
+arrange(gaz_name_max, desc(n)) #Arrange in descending order
 
+#HTML Table: Scrollable
 table_name <- kable(gaz_name_max, "html") %>% 
-  kable_styling(bootstrap_options = "striped", "hover")
+  kable_styling(bootstrap_options = "striped", "hover") %>% 
+  scroll_box(width = "80%", height = "200px")
 
 table_name
 
@@ -106,14 +110,18 @@ table_name
 *Question 2:* What is the least frequently occuring feature name?
 ```{r results='hide'}
 
+#Variety in Feature Class
 unique(gaz$FEATURE_CLASS)
+
+#Set Column as Factor
 gaz$FEATURE_CLASS <- as.factor(gaz$FEATURE_CLASS)
 
+#Dataframe: Frequency of Feature Names (Ordered to Min)
 gaz_class_min <- gaz %>% 
   count(FEATURE_CLASS) %>% 
   group_by(FEATURE_CLASS)
 
-arrange(gaz_class_min, desc(-gaz_class_min$n))
+arrange(gaz_class_min, desc(-gaz_class_min$n)) #Arrange in descending order
 
 ```
 
@@ -123,9 +131,9 @@ arrange(gaz_class_min, desc(-gaz_class_min$n))
    
 *Question 3:* What is the approximate center point of each county?
 
-```{r}
+```{r message=FALSE}
 
-#Points
+#Dataframe: Subset of Coordinates, Feature name, County name
 gaz_points <- data.frame(
   long = gaz$PRIM_LONG_DEC,
   lat = gaz$PRIM_LAT_DEC,
@@ -135,7 +143,7 @@ gaz_points <- data.frame(
   stringsAsFactors = FALSE
 )
 
-
+#Dataframe: Summarize Coordinates by County
 gaz_centers <- gaz_points %>% 
   group_by(county) %>% 
   summarise(
@@ -143,9 +151,11 @@ gaz_centers <- gaz_points %>%
     Latitude = mean(lat, na.rm = TRUE)) %>% 
   rename(County = county)
 
+#HTML Table: Scrollable
 table_centers <- gaz_centers %>% 
   kable("html") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  kable_styling(bootstrap_options = c("striped", "hover")) %>% 
+  scroll_box(width = "80%", height = "400px")
 
 table_centers
 
@@ -159,32 +169,37 @@ table_centers
    
 ```{r message=FALSE, warning=FALSE}
 
-#Raw Dataset:
+#Import Offical Feature Class Dataset:
 features_raw <- read_csv("Class_Code_Definitions.csv") %>% 
   select(1) %>% 
   setNames('FEATURE_CLASS')
 
-class_combo <- as.tibble(gaz_class_min)
+#Create Combo Tibble
+class_combo <- as.tibble(gaz_class_min) #made tibble
 
 class_combo <- class_combo %>% 
-  full_join(features_raw, by = "FEATURE_CLASS") %>% 
+  full_join(features_raw, by = "FEATURE_CLASS") %>%  #join Offical Features to Gaz Features (note: rows go from 63 to 65)
   arrange(-desc(FEATURE_CLASS))
 
+#Vector of Manmade (M) and Natural (N). Both = MN; Unknown = NA
 definition <- c("M","N","N","N","N","N","N","N","N","N","M","M","M","N","N","M","M","N","M","M","N","N","M","M","N","N", "N","N","N","N","M","M","N","N","N","N","MN","M","M","M","M","M","N","N","M","M","N","N","M","M","N","M","N","N","N","N", "N","N","M","M","M","NA","N","M","N")
 
-class_combo <- add_column(class_combo, Type = definition)
-  
+class_combo <- add_column(class_combo, Type = definition) #Expand tibble with Manmade/Natural categories
+
+#Full join of Gaz & Combo tibble  
 gaz_join <- gaz %>% 
   full_join(class_combo, by = "FEATURE_CLASS")
 
-gaz_join$COUNTY_NAME <- as.factor(gaz_join$COUNTY_NAME)
+gaz_join$COUNTY_NAME <- as.factor(gaz_join$COUNTY_NAME)  #Change County_Name to factor
 
+#Dataframe: Summarize # of M/N Features by County
 gaz_join_count <- gaz_join %>% 
   group_by(COUNTY_NAME) %>% 
   summarise(
     Manmade_Per_County = sum(Type == "M", na.rm = TRUE),
     Natural_Per_County = sum(Type == "N", na.rm = TRUE))
 
+#Dataframe: Total Features per County
 gaz_points_count <- gaz %>% 
   group_by(COUNTY_NAME) %>% 
   count(FEATURE_CLASS)
@@ -195,12 +210,13 @@ gaz_points_count <- gaz_points_count %>%
     sum(n)
   )
 
-gaz_points_count <- rename(gaz_points_count, Total_Per_County = "sum(n)")
+gaz_points_count <- rename(gaz_points_count, Total_Per_County = "sum(n)") #Rename column
 
-
+#Dataframe Complete: County Name, Counts of Manmade, Natural, and Total features per County
 gaz_join_count <- gaz_join_count %>% 
   full_join(gaz_points_count, by = "COUNTY_NAME")
 
+#Dataframe: Feature Type Fractions
 gaz_join_fraction <- gaz_join_count %>% 
   group_by(COUNTY_NAME) %>% 
   summarise(
@@ -215,9 +231,15 @@ gaz_join_fraction <- gaz_join_fraction %>%
   select(-3) %>% 
   rename(County = COUNTY_NAME)
 
+#Round Fractions
+gaz_join_fraction$Fraction_Manmade <- round(gaz_join_fraction$Fraction_Manmade, 2)
+gaz_join_fraction$Fraction_Natural <- round(gaz_join_fraction$Fraction_Natural, 2)
+
+
 fraction_table <- gaz_join_fraction %>% 
   kable("html") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  kable_styling(bootstrap_options = c("striped", "hover")) %>% 
+  scroll_box(width = "90%", height = "400px")
 
 fraction_table
 
