@@ -1,0 +1,339 @@
+---
+title: "ESM 262: Assignment 2"
+author: "Emma Siegfried"
+date: "May 18, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###SetUp
+Library:
+```{r message=FALSE}
+
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(DBI)
+
+```
+
+
+###Import and Tidy
+
+1. Read the gazetteer data as-is (all columns; no type conversion) into a gaz_raw tibble. 
+  
+2. Copy only specified columns into a gaz tibble.
+  
+```{r results='hide'}
+
+#Raw Dataset:
+gaz_raw <-
+  read_delim(
+    "CA_Features_20180401.txt",
+    delim = "|",
+    col_types = cols(.default = col_character())
+  )
+#class(gaz_raw) #confirmed this is a tibble
+```
+
+```{r results='hide'}
+
+#Subset data
+gaz <- 
+  select(gaz_raw,
+    id         = FEATURE_ID,
+    name       = FEATURE_NAME,
+    class      = FEATURE_CLASS,
+    state      = STATE_ALPHA,
+    county     = COUNTY_NAME,
+    lat        = PRIM_LAT_DEC,
+    lon        = PRIM_LONG_DEC,
+    src_lat    = SOURCE_LAT_DEC,
+    src_lon    = SOURCE_LONG_DEC,
+    elev       = ELEV_IN_M,
+    map        = MAP_NAME,
+    created_on = DATE_CREATED,
+    edited_on  = DATE_EDITED
+  )
+
+```
+  
+3. Convert columns to appropriate type. Convert placeholders for unknown data to NA
+ 
+*Tidy Dataset:*
+```{r results='hide'}
+
+gaz$id         = parse_integer(gaz$id)
+gaz$lat        = parse_double(gaz$lat, na = "0")
+gaz$lon        = parse_double(gaz$lon, na = "0")
+gaz$src_lat    = parse_double(gaz$src_lat)
+gaz$src_lon    = parse_double(gaz$src_lon)
+gaz$elev       = parse_integer(gaz$elev)
+gaz$map        = parse_character(gaz$map, na = "Unknown")
+gaz$created_on = parse_date(gaz$created_on, format = "%m/%d/%Y")
+gaz$edited_on  = parse_date(gaz$edited_on, format = "%m/%d/%Y")
+
+```
+   
+4. Delete rows with: primary latitude and longitude unknown; and if not in California
+```{r}
+
+gaz <-
+  filter(gaz,
+    !is.na(lon) &
+    !is.na(lat) &
+    !is.na(county) &
+    state == "CA"
+  )
+
+gaz
+
+```
+
+5. Create SQL database connection
+```{r}
+
+
+con <- DBI::dbConnect(RSQLite::SQLite(), path = ":memory:")
+
+copy_to(con, gaz, "gaz",
+        temporary = FALSE, 
+        overwrite = TRUE, 
+        indexes = list(
+         "name"
+        ))
+
+#Create a table cookie that connects to the database
+
+gaz_db <- tbl(con, "gaz")
+
+```
+
+---
+  
+###Analyze and Answer
+
+**Q1. What is the most frequently occurring feature name?**
+```{r}
+
+count_names_max <- dbGetQuery(con, 
+                          "SELECT NAME, COUNT() AS n 
+                          FROM gaz GROUP BY NAME
+                          ORDER BY n DESC
+                          LIMIT 1")
+
+count_names_max
+
+```
+**Answer:** Church of Christ appears the most with 228 listings
+
+---
+
+**Q2. What is the least-frequently occurring feature class?**
+```{r}
+
+
+count_class_min <- dbGetQuery(con,
+                            "SELECT CLASS, COUNT () AS n
+                            FROM gaz
+                            GROUP BY CLASS
+                            ORDER BY n
+                            LIMIT 2")
+
+count_class_min
+
+```
+**Answer:** Sea and Isthum appear the least with 1 listing each.
+
+---
+
+**Q3. What is the approximate center point of each count?**
+
+```{r}
+
+
+#Summarize Coordinates by County
+gaz_centers <- dbGetQuery(con, 
+        "SELECT COUNTY, 
+                Center_Longitude, Center_Latitude 
+         FROM (SELECT COUNTY, 
+                MIN(LON) + MAX(LON) AS Center_Longitude,
+                MIN(LAT) + MAX(LAT) AS Center_Latitude 
+                FROM gaz
+                GROUP BY COUNTY)")
+
+head(gaz_centers)
+
+```
+
+**Answer**: County centers are listed in the gaz_centers query.
+
+---
+
+**Q4. What are the fractions of the total number of features in each county that are natural vs. manmade?**
+
+Step 1: Create New Category Table
+
+```{r catebory_tibble}
+
+categories <- tribble(
+  ~class,             ~category,
+  "Airport",          "manmade",
+  "Arch",             "natural",
+  "Area",             "natural",
+  "Arroyo",           "natural",
+  "Bar",              "natural",
+  "Basin",            "natural",
+  "Bay",              "natural",
+  "Beach",            "natural",
+  "Bench",            "natural",
+  "Bend",             "natural",
+  "Bridge",           "manmade",
+  "Building",         "manmade",
+  "Canal",            "manmade",
+  "Cape",             "natural",
+  "Cemetery",         "manmade",
+  "Census",           "manmade",
+  "Channel",          "natural",
+  "Church",           "manmade",
+  "Civil",            "manmade",
+  "Cliff",            "natural",
+  "Crater",           "natural",
+  "Crossing",         "manmade",
+  "Dam",              "manmade",
+  "Falls",            "natural",
+  "Flat",             "natural",
+  "Forest",           "natural",
+  "Gap",              "natural",
+  "Glacier",          "natural",
+  "Gut",              "natural",
+  "Harbor",           "manmade",
+  "Hospital",         "manmade",
+  "Island",           "natural",
+  "Isthmus",          "natural",
+  "Lake",             "natural",
+  "Lava",             "natural",
+  "Levee",            NA,
+  "Locale",           "manmade",
+  "Military",         "manmade",
+  "Mine",             "manmade",
+  "Oilfield",         "manmade",
+  "Park",             "manmade",
+  "Pillar",           "natural",
+  "Plain",            "natural",
+  "Populated Place",  "manmade",
+  "Post Office",      "manmade",
+  "Range",            "natural",
+  "Rapids",           "natural",
+  "Reserve",          "manmade",
+  "Reservoir",        "manmade",
+  "Ridge",            "natural",
+  "School",           "manmade",
+  "Sea",              "natural",
+  "Slope",            "natural",
+  "Spring",           "natural",
+  "Stream",           "natural",
+  "Summit",           "natural",
+  "Swamp",            "natural",
+  "Tower",            "manmade",
+  "Trail",            "manmade",
+  "Tunnel",           "manmade",
+  "Valley",           "natural",
+  "Well",             "manmade",
+  "Woods",            "natural"
+)
+```
+
+
+Step 2: Copy Categories Table to SQL Database
+```{r}
+
+#Copy into Database & Wrote out Table
+
+copy_to(con, categories, "categories",
+        temporary = FALSE, 
+        overwrite = TRUE)
+
+```
+
+
+Step 3: Make smaller Gaz table
+```{r}
+
+#Gaz Table
+gaz_mini <- dbGetQuery(con,
+      "SELECT COUNTY, CLASS
+       FROM gaz")
+
+```
+
+
+Step 4: Join Categories with Gaz
+```{r}
+
+#Join Categories and Gaz Tables
+
+category_combo <- dbGetQuery(con, 
+     "SELECT gaz.COUNTY, gaz.CLASS,  
+             categories.CATEGORY
+      FROM gaz 
+      JOIN categories
+      ON gaz.CLASS = categories.CLASS
+      WHERE COUNTY IS NOT NULL");
+
+```
+
+
+Step 5: Write out Combined Table
+```{r}
+
+#Save combo table to database
+copy_to(con, category_combo, "category_combo",
+        temporary = FALSE, 
+        overwrite = TRUE)
+
+gaz_db_category <- tbl(con, "category_combo")
+
+```
+
+
+Step 6: Calculate Manmade & Natural fractions per County
+```{r}
+
+#Create Table of Feature Counts per County
+category_fractions <- dbGetQuery(con,
+     "SELECT COUNTY, 
+      SUM(category = 'manmade') AS Manmade_Per_County,
+      SUM(category = 'natural') AS Natural_Per_County,
+      COUNT(category) AS Total_Per_County,
+      ROUND(CAST(SUM(category = 'manmade') AS REAL)/COUNT(category),2) 
+          AS Fraction_Manmade,
+      ROUND(CAST(SUM(category = 'natural') AS REAL)/COUNT(category),2)
+          AS Fraction_Natural
+      FROM category_combo
+      GROUP BY County")
+
+head(category_fractions)
+
+```
+
+
+Step 7: Write out Fraction Table
+```{r}
+
+#Save fraction table to database
+copy_to(con, category_fractions, "category_fractions",
+        temporary = FALSE, 
+        overwrite = TRUE)
+
+gaz_db_fractions <- tbl(con, "category_fractions")
+
+```
+
+
+
